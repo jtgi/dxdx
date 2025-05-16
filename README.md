@@ -1,6 +1,7 @@
 # dxdx
 
-Web3 portfolio tracker for viewing trader positions and portfolio distributions.
+deployed at https://dxdx.fly.dev
+– powertool for [dxterminal](https://terminal.markets)
 
 ## Features
 
@@ -10,10 +11,6 @@ Web3 portfolio tracker for viewing trader positions and portfolio distributions.
 - TailwindCSS UI
 - Keyboard shortcuts (`/` to focus search)
 - TypeScript
-
-## Demo
-
-[dxdx.fly.dev](https://dxdx.fly.dev)
 
 ## Development
 
