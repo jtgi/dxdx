@@ -1,6 +1,6 @@
 import { Avatar, AvatarFallback, AvatarImage } from "~/components/ui/avatar";
 import type { Route } from "./+types/home";
-import { getAgents, type Agent } from "~/lib/dx.server";
+import { getAgents, type Agent, getActions, type Action } from "~/lib/dx.server";
 import { Input } from "~/components/ui/input";
 import { Button } from "~/components/ui/button";
 import React from "react";
@@ -18,27 +18,28 @@ export async function loader({ request }: Route.LoaderArgs) {
   const input = url.searchParams.get("address");
 
   if (!input) {
-    return { agents: [], address: "" };
+    return { agents: [], actions: [], address: "" };
   }
 
   const { address, error } = await resolveEnsName(input);
 
   if (error) {
-    return { agents: [], address: input, error };
+    return { agents: [], actions: [], address: input, error };
   }
 
   const agents = await getAgents({ address });
 
   if (agents.length === 0) {
-    return { agents: [], address: input, error: "No agents found" };
+    return { agents: [], actions: [], address: input, error: "No agents found" };
   }
 
   const sorted = agents.sort((a: Agent, b: Agent) => b.portfolio_value - a.portfolio_value);
-  return { agents: sorted, address: input };
+  const actions = await getActions({ agentIds: agents.map((agent: Agent) => agent.id) });
+  return { agents: sorted, actions, address: input };
 }
 
 export default function Home({ loaderData }: Route.ComponentProps) {
-  const { agents, address, error } = loaderData;
+  const { agents, address, error, actions } = loaderData;
   const [selectedAgent, setSelectedAgent] = React.useState<Agent | null>(null);
   const searchInputRef = React.useRef<HTMLInputElement>(null);
 
@@ -59,6 +60,15 @@ export default function Home({ loaderData }: Route.ComponentProps) {
     });
     return acc;
   }, {}) as Record<string, number>;
+
+  const actionsByAgent = actions.reduce((acc: Record<string, Action[]>, action: Action) => {
+    acc[action.agent_id] = [...(acc[action.agent_id] || []), action];
+    return acc;
+  }, {}) as Record<string, Action[]>;
+
+  const sortedActions = [...actions].sort(
+    (a, b) => new Date(b.action_timestamp).getTime() - new Date(a.action_timestamp).getTime()
+  );
 
   return (
     <main className="p-4 text-white w-full h-screen">
@@ -110,65 +120,101 @@ export default function Home({ loaderData }: Route.ComponentProps) {
 
           <div>
             <h2 className="text-sm font-medium text-zinc-400 mb-3">All Traders</h2>
-            <div className="overflow-x-auto">
-              <table className="w-full border-separate border-spacing-0">
-                <thead>
-                  <tr className="uppercase text-xs text-zinc-400 font-bold border-b-2 border-zinc-700 bg-zinc-900">
-                    <th className="text-left  py-2">Trader</th>
-                    <th className="text-right py-2">Portfolio Value</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {agents.map((agent: Agent) => (
-                    <React.Fragment key={agent.id}>
-                      <tr
-                        className="bg-zinc-900 border-b cursor-pointer hover:bg-zinc-800"
-                        onClick={() => setSelectedAgent(agent)}
-                      >
-                        <td className="py-2 align-middle whitespace-nowrap">
-                          <div className="flex items-center gap-2">
-                            <Avatar className="w-5 h-5">
-                              <AvatarImage src={agent.image_url} alt={agent.name} />
-                              <AvatarFallback>{agent.name.slice(0, 2)}</AvatarFallback>
-                            </Avatar>
-                            <span className="text-xs font-medium">{agent.name}</span>
+            <div className="grid grid-cols-1 gap-4">
+              {agents.map((agent: Agent) => (
+                <div
+                  key={agent.id}
+                  className="border border-zinc-800 rounded-lg p-4 cursor-pointer hover:bg-zinc-800"
+                  onClick={() => setSelectedAgent(agent)}
+                >
+                  <div className="flex items-start gap-4">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Avatar className="w-8 h-8">
+                          <AvatarImage src={agent.image_url} alt={agent.name} />
+                          <AvatarFallback>{agent.name.slice(0, 2)}</AvatarFallback>
+                        </Avatar>
+                        <div>
+                          <div className="text-sm font-medium">{agent.name}</div>
+                          <div className="text-xs text-zinc-400">{agent.type}</div>
+                        </div>
+                      </div>
+
+                      {actionsByAgent[agent.id]?.[0] && (
+                        <div className="text-xs text-zinc-400">
+                          <div className="font-medium text-zinc-300">
+                            {actionsByAgent[agent.id][0].reasoning}
                           </div>
-                        </td>
-                        <td className="py-2 align-middle text-right font-mono text-xs font-bold whitespace-nowrap">
-                          {Math.round(agent.portfolio_value).toLocaleString()} WEBCOIN
-                        </td>
-                      </tr>
-                      {Object.entries(agent.portfolio)
-                        .sort((a, b) => b[1] - a[1])
-                        .map(([key, value]) => (
-                          <tr
-                            key={`${agent.id}-${key}`}
-                            className="hover:bg-zinc-800 border-b border-zinc-900"
-                          >
-                            <td className="py-1 text-xs font-mono text-zinc-300 pl-10 text-right" colSpan={2}>
+                          <div className="mt-1">{actionsByAgent[agent.id][0].action_time_ago}</div>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="text-right min-w-[200px]">
+                      <div className="text-sm font-mono font-bold mb-2">
+                        {Math.round(agent.portfolio_value).toLocaleString()} WEBCOIN
+                      </div>
+                      <div className="space-y-1">
+                        {Object.entries(agent.portfolio)
+                          .sort((a, b) => b[1] - a[1])
+                          .map(([key, value]) => (
+                            <div key={key} className="text-xs font-mono text-zinc-400">
                               {Math.round(value).toLocaleString()} {key}
-                            </td>
-                          </tr>
-                        ))}
-                      <tr className="h-6" />
-                    </React.Fragment>
-                  ))}
-                </tbody>
-              </table>
+                            </div>
+                          ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <h2 className="text-sm font-medium text-zinc-400 mb-3">Recent Actions</h2>
+            <div className="space-y-2">
+              {sortedActions.map((action) => (
+                <div key={action.id} className="bg-zinc-900 rounded-lg p-3">
+                  <div className="flex items-start gap-2">
+                    <Avatar className="w-6 h-6 mt-1">
+                      <AvatarImage
+                        src={agents.find((a: Agent) => a.id === action.agent_id)?.image_url}
+                        alt={agents.find((a: Agent) => a.id === action.agent_id)?.name || ""}
+                      />
+                      <AvatarFallback>
+                        {agents.find((a: Agent) => a.id === action.agent_id)?.name.slice(0, 2)}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="flex-1">
+                      <div className="text-xs text-zinc-400">
+                        {agents.find((a: Agent) => a.id === action.agent_id)?.name} • {action.action_time_ago}
+                      </div>
+                      <div className="text-sm mt-1">{action.reasoning}</div>
+                      {action.details && (
+                        <div className="text-xs text-zinc-400 mt-1">
+                          {action.details.type} • {action.details.amount_in} → {action.details.amount_out}{" "}
+                          {action.details.token_symbol}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
         </div>
       )}
 
       <div className="fixed bottom-0 left-0 right-0 p-4 bg-zinc-900/80 backdrop-blur-sm border-t border-zinc-800">
-        <div className="max-w-xl mx-auto">
+        <div className="max-w-xl mx-auto flex items-center justify-between">
+          <div className="text-3xl font-bold text-zinc-400 font-mono">dxdx</div>
           <form className="flex gap-2">
             <Input
               ref={searchInputRef}
               type="text"
               name="address"
               defaultValue={address}
-              className="bg-zinc-900 border-zinc-800 text-white w-[300px] selection:bg-orange-500/20 selection:text-orange-400"
+              className="bg-zinc-900 border-zinc-800 text-gray-300 w-[300px] selection:bg-orange-500/20 selection:text-orange-400"
               placeholder="Enter address or ENS name..."
             />
             <Button type="submit" size="sm" className="bg-white text-black hover:bg-zinc-200">
@@ -194,59 +240,74 @@ export default function Home({ loaderData }: Route.ComponentProps) {
                   </div>
                 </DialogTitle>
               </DialogHeader>
-              <div className="border-b border-zinc-800 my-4" />
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 text-base">
-                <div>
-                  <div className="uppercase tracking-wide text-xs font-bold text-zinc-400 mb-3">Persona</div>
-                  <div className="space-y-2">
-                    <div>
-                      <span className="text-zinc-400">Animal:</span>{" "}
-                      <span className="font-medium text-white">{selectedAgent.persona.animal}</span>
-                    </div>
-                    <div>
-                      <span className="text-zinc-400">Gender:</span>{" "}
-                      <span className="font-medium text-white">{selectedAgent.persona.gender}</span>
-                    </div>
-                    <div>
-                      <span className="text-zinc-400">Age Range:</span>{" "}
-                      <span className="font-medium text-white">{selectedAgent.persona.age_range}</span>
-                    </div>
-                    <div>
-                      <span className="text-zinc-400">Occupation:</span>{" "}
-                      <span className="font-medium text-white">{selectedAgent.persona.occupation}</span>
-                    </div>
-                    <div>
-                      <span className="text-zinc-400">Hobbies:</span>{" "}
-                      <span className="font-medium text-white">
+
+              <div className="my-4">
+                <table className="w-full text-xs text-zinc-300 border-separate [border-spacing:0.25rem]">
+                  <tbody>
+                    <tr>
+                      <td className="font-semibold text-zinc-400">Animal</td>
+                      <td className="font-mono">{selectedAgent.persona.animal}</td>
+                      <td className="font-semibold text-zinc-400">Condition</td>
+                      <td className="font-mono">{selectedAgent.condition}</td>
+                    </tr>
+                    <tr>
+                      <td className="font-semibold text-zinc-400">Gender</td>
+                      <td className="font-mono">{selectedAgent.persona.gender}</td>
+                      <td className="font-semibold text-zinc-400">Energy</td>
+                      <td className="font-mono">{selectedAgent.energy}</td>
+                    </tr>
+                    <tr>
+                      <td className="font-semibold text-zinc-400">Age</td>
+                      <td className="font-mono">{selectedAgent.persona.age_range}</td>
+                      <td className="font-semibold text-zinc-400">Last Action</td>
+                      <td className="font-mono">{selectedAgent.last_action_time_ago}</td>
+                    </tr>
+                    <tr>
+                      <td className="font-semibold text-zinc-400">Occupation</td>
+                      <td className="font-mono" colSpan={3}>
+                        {selectedAgent.persona.occupation}
+                      </td>
+                    </tr>
+                    <tr>
+                      <td className="font-semibold text-zinc-400">Hobbies</td>
+                      <td className="font-mono" colSpan={3}>
                         {selectedAgent.persona.hobbies.join(", ")}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-                <div>
-                  <div className="uppercase tracking-wide text-xs font-bold text-zinc-400 mb-3">Details</div>
-                  <div className="space-y-2">
-                    <div>
-                      <span className="text-zinc-400">Condition:</span>{" "}
-                      <span className="font-medium text-white">{selectedAgent.condition}</span>
-                    </div>
-                    <div>
-                      <span className="text-zinc-400">Energy:</span>{" "}
-                      <span className="font-medium text-white">{selectedAgent.energy}</span>
-                    </div>
-                    <div>
-                      <span className="text-zinc-400">Last Action:</span>{" "}
-                      <span className="font-medium text-white">{selectedAgent.last_action_time_ago}</span>
-                    </div>
-                    <div>
-                      <span className="text-zinc-400">Portfolio Value:</span>{" "}
-                      <span className="font-medium text-white">
+                      </td>
+                    </tr>
+                    <tr>
+                      <td className="font-semibold text-zinc-400">Portfolio Value</td>
+                      <td className="font-mono" colSpan={3}>
                         {Math.round(selectedAgent.portfolio_value).toLocaleString()} WEBCOIN
-                      </span>
-                    </div>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <div className="border-b border-zinc-800 my-2" />
+
+              {actionsByAgent[selectedAgent.id] && (
+                <div>
+                  <div className="uppercase tracking-wide text-xs font-bold text-zinc-400 mb-2">
+                    Recent Actions
+                  </div>
+                  <div className="space-y-2 max-h-56 overflow-y-auto pr-1">
+                    {actionsByAgent[selectedAgent.id].slice(0, 10).map((action) => (
+                      <div key={action.id} className="bg-zinc-800/50 rounded-lg p-2">
+                        <div className="text-xs text-zinc-400">{action.action_time_ago}</div>
+                        <div className="text-xs mt-1">{action.reasoning}</div>
+                        {action.details && (
+                          <div className="text-xs text-zinc-400 mt-1">
+                            <span className="uppercase">{action.details.type}</span> •{" "}
+                            {action.details.amount_in} → {action.details.amount_out}{" "}
+                            {action.details.token_symbol}
+                          </div>
+                        )}
+                      </div>
+                    ))}
                   </div>
                 </div>
-              </div>
+              )}
             </>
           )}
         </DialogContent>

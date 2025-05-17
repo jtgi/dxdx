@@ -40,3 +40,38 @@ export async function getAgents({ address }: { address: string }) {
 
   return data;
 }
+
+export async function getActions({ agentIds }: { agentIds: string[] }) {
+  const url = new URL(`https://terminal.markets/api/agents/logs/actions`);
+  url.searchParams.set("agent_ids", agentIds.join(","));
+  url.searchParams.set("limit", "1000");
+  url.searchParams.set("offset", "0");
+
+  const response = await fetch(url);
+  const { data } = await response.json();
+  return data.map((action: Action) => ({
+    ...action,
+    action_time_ago: new Date(action.action_timestamp).toLocaleTimeString([], {
+      hour: "2-digit",
+      minute: "2-digit",
+    }),
+  })) as Action[];
+}
+
+export type Action = {
+  id: string;
+  agent_id: string;
+  action_timestamp: string;
+  action_time_ago: string;
+  action_type: string;
+  reasoning: string;
+  details: {
+    type: string;
+    amount_in: number;
+    amount_out: number;
+    price_after: number;
+    token_symbol: string;
+  };
+  location_id: string;
+  created_at: string;
+};
