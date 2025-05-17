@@ -75,3 +75,16 @@ export type Action = {
   location_id: string;
   created_at: string;
 };
+
+export async function getPrompts({ agentIds }: { agentIds: string[] }) {
+  const url = new URL(`https://terminal.markets/api/agents/prompts`);
+  url.searchParams.set("ids", agentIds.join(","));
+
+  const response = await fetch(url);
+  const { prompts } = await response.json();
+  return prompts;
+}
+
+export type Prompt = {
+  [agentId: string]: string;
+};
