@@ -9,6 +9,7 @@ import { getAgents, getActions, getPrompts } from "~/lib/dx.server";
 import { resolveEnsName } from "~/lib/ens.server";
 import type { Route } from "./+types/home";
 import type { Agent, Action, Prompt } from "~/lib/dx.server";
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 export function meta({}: Route.MetaArgs) {
   return [{ title: "dxdx - dxterminal pro" }, { name: "description", content: "dxdx - dxterminal pro" }];
@@ -41,6 +42,7 @@ export async function loader({ request }: Route.LoaderArgs) {
 export default function Home({ loaderData }: Route.ComponentProps) {
   const { agents, address, error, actions, prompts } = loaderData;
   const [selectedAgent, setSelectedAgent] = React.useState<Agent | null>(null);
+  const [selectedAsset, setSelectedAsset] = React.useState<{ name: string; history: Array<{ timestamp: number; price: number }> } | null>(null);
   const searchInputRef = React.useRef<HTMLInputElement>(null);
 
   useKeyboardShortcut({
@@ -69,6 +71,16 @@ export default function Home({ loaderData }: Route.ComponentProps) {
   const sortedActions = [...actions].sort(
     (a: Action, b: Action) => new Date(b.action_timestamp).getTime() - new Date(a.action_timestamp).getTime()
   );
+
+  const handleAssetClick = async (assetName: string) => {
+    try {
+      const response = await fetch(`https://dx2-public-api-aadnt.ondigitalocean.app/public/v1/pools/${assetName}/history`);
+      const data = await response.json();
+      setSelectedAsset({ name: assetName, history: data });
+    } catch (error) {
+      console.error('Error fetching price history:', error);
+    }
+  };
 
   const renderSearchForm = (className = "") => (
     <form className={`flex gap-2 ${className}`}>
@@ -153,7 +165,14 @@ export default function Home({ loaderData }: Route.ComponentProps) {
                     .sort(([, a], [, b]) => (b as number) - (a as number))
                     .map(([key, value]: [string, number]) => (
                       <tr key={key} className="border-b border-zinc-800 hover:bg-zinc-800">
-                        <td className="py-2 text-sm">{key}</td>
+                        <td className="py-2 text-sm">
+                          <button
+                            onClick={() => handleAssetClick(key)}
+                            className="hover:text-orange-400 transition-colors"
+                          >
+                            {key}
+                          </button>
+                        </td>
                         <td className="py-2 text-right text-sm">{Math.round(value).toLocaleString()}</td>
                         <td className="py-2 text-right text-sm">
                           {((value / totalPortfolioValue) * 100).toFixed(2)}%
@@ -366,6 +385,50 @@ export default function Home({ loaderData }: Route.ComponentProps) {
                   </div>
                 </div>
               )}
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={!!selectedAsset} onOpenChange={() => setSelectedAsset(null)}>
+        <DialogContent className="bg-zinc-900 text-white border-zinc-800 max-w-3xl">
+          {selectedAsset && (
+            <>
+              <DialogHeader>
+                <DialogTitle className="text-xl font-bold">{selectedAsset.name} Price History</DialogTitle>
+              </DialogHeader>
+              <div className="h-[400px] w-full mt-4">
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={selectedAsset.history}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#333" />
+                    <XAxis 
+                      dataKey="timestamp" 
+                      stroke="#666"
+                      tickFormatter={(timestamp) => new Date(timestamp * 1000).toLocaleTimeString()}
+                    />
+                    <YAxis 
+                      stroke="#666"
+                      tickFormatter={(price) => price.toFixed(2)}
+                    />
+                    <Tooltip 
+                      contentStyle={{ 
+                        backgroundColor: '#1a1a1a',
+                        border: '1px solid #333',
+                        borderRadius: '4px'
+                      }}
+                      labelFormatter={(timestamp) => new Date(timestamp * 1000).toLocaleString()}
+                      formatter={(price: number) => [price.toFixed(2), 'Price']}
+                    />
+                    <Line 
+                      type="monotone" 
+                      dataKey="price" 
+                      stroke="#f97316" 
+                      strokeWidth={2}
+                      dot={false}
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
             </>
           )}
         </DialogContent>
