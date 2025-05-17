@@ -10,7 +10,7 @@ import { useKeyboardShortcut } from "~/hooks/useKeyboardShortcut";
 import { ArrowRight } from "lucide-react";
 
 export function meta({}: Route.MetaArgs) {
-  return [{ title: "Webcoin" }, { name: "description", content: "Webcoin" }];
+  return [{ title: "dxdx - dxterminal pro" }, { name: "description", content: "dxdx - dxterminal pro" }];
 }
 
 export async function loader({ request }: Route.LoaderArgs) {
