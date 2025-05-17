@@ -79,41 +79,33 @@ export default function Home({ loaderData }: Route.ComponentProps) {
           </div>
         </div>
       ) : (
-        <div className="flex flex-col gap-12 max-w-xl mx-auto pb-20">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-12 pb-20">
           <div>
             <p className="text-sm text-zinc-400">Total Portfolio Value</p>
             <p className="text-2xl font-bold text-white">{Math.round(total).toLocaleString()} WEBCOIN</p>
-          </div>
-          <div className="grid grid-cols-1 gap-4">
-            <div>
-              <div>
-                <h2 className="text-sm font-medium text-zinc-400 mb-3">Portfolio Distribution</h2>
-                <div className="overflow-x-auto">
-                  <table className="w-full">
-                    <thead>
-                      <tr className="text-xs text-zinc-500 border-b border-zinc-800">
-                        <th className="text-left pb-2">Asset</th>
-                        <th className="text-right pb-2">Amount</th>
-                        <th className="text-right pb-2">% of Portfolio</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {Object.entries(aggregated)
-                        .sort((a, b) => b[1] - a[1])
-                        .map(([key, value]) => (
-                          <tr key={key} className="border-b border-zinc-800 hover:bg-zinc-800">
-                            <td className="py-2 font-mono text-sm">{key}</td>
-                            <td className="py-2 text-right font-mono text-sm">
-                              {Math.round(value).toLocaleString()}
-                            </td>
-                            <td className="py-2 text-right font-mono text-sm">
-                              {((value / total) * 100).toFixed(2)}%
-                            </td>
-                          </tr>
-                        ))}
-                    </tbody>
-                  </table>
-                </div>
+            <div className="mt-8">
+              <h2 className="text-sm font-medium text-zinc-400 mb-3">Portfolio Distribution</h2>
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead>
+                    <tr className="text-xs text-zinc-500 border-b border-zinc-800">
+                      <th className="text-left pb-2">Asset</th>
+                      <th className="text-right pb-2">Amount</th>
+                      <th className="text-right pb-2">% of Portfolio</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {Object.entries(aggregated)
+                      .sort((a, b) => b[1] - a[1])
+                      .map(([key, value]) => (
+                        <tr key={key} className="border-b border-zinc-800 hover:bg-zinc-800">
+                          <td className="py-2  text-sm">{key}</td>
+                          <td className="py-2 text-right  text-sm">{Math.round(value).toLocaleString()}</td>
+                          <td className="py-2 text-right  text-sm">{((value / total) * 100).toFixed(2)}%</td>
+                        </tr>
+                      ))}
+                  </tbody>
+                </table>
               </div>
             </div>
           </div>
@@ -151,14 +143,14 @@ export default function Home({ loaderData }: Route.ComponentProps) {
                     </div>
 
                     <div className="text-right min-w-[200px]">
-                      <div className="text-sm font-mono font-bold mb-2">
+                      <div className="text-sm  font-bold mb-2">
                         {Math.round(agent.portfolio_value).toLocaleString()} WEBCOIN
                       </div>
                       <div className="space-y-1">
                         {Object.entries(agent.portfolio)
                           .sort((a, b) => b[1] - a[1])
                           .map(([key, value]) => (
-                            <div key={key} className="text-xs font-mono text-zinc-400">
+                            <div key={key} className="text-xs  text-zinc-400">
                               {Math.round(value).toLocaleString()} {key}
                             </div>
                           ))}
@@ -170,7 +162,7 @@ export default function Home({ loaderData }: Route.ComponentProps) {
             </div>
           </div>
 
-          <div>
+          <div className="w-full">
             <h2 className="text-sm font-medium text-zinc-400 mb-3">Recent Actions</h2>
             <div className="space-y-2">
               {sortedActions.map((action) => (
@@ -205,9 +197,9 @@ export default function Home({ loaderData }: Route.ComponentProps) {
         </div>
       )}
 
-      <div className="fixed bottom-0 left-0 right-0 p-4 bg-zinc-900/80 backdrop-blur-sm border-t border-zinc-800">
+      <div className="fixed bottom-0 left-0 right-0 p-4 bg-zinc-900/30 backdrop-blur-sm border-t border-zinc-800">
         <div className="max-w-xl mx-auto flex items-center justify-between">
-          <div className="text-3xl font-bold text-zinc-400 font-mono">dxdx</div>
+          <div className="text-3xl italic font-extrabold text-zinc-200">dxdx</div>
           <form className="flex gap-2">
             <Input
               ref={searchInputRef}
@@ -246,37 +238,37 @@ export default function Home({ loaderData }: Route.ComponentProps) {
                   <tbody>
                     <tr>
                       <td className="font-semibold text-zinc-400">Animal</td>
-                      <td className="font-mono">{selectedAgent.persona.animal}</td>
+                      <td className="">{selectedAgent.persona.animal}</td>
                       <td className="font-semibold text-zinc-400">Condition</td>
-                      <td className="font-mono">{selectedAgent.condition}</td>
+                      <td className="">{selectedAgent.condition}</td>
                     </tr>
                     <tr>
                       <td className="font-semibold text-zinc-400">Gender</td>
-                      <td className="font-mono">{selectedAgent.persona.gender}</td>
+                      <td className="">{selectedAgent.persona.gender}</td>
                       <td className="font-semibold text-zinc-400">Energy</td>
-                      <td className="font-mono">{selectedAgent.energy}</td>
+                      <td className="">{selectedAgent.energy}</td>
                     </tr>
                     <tr>
                       <td className="font-semibold text-zinc-400">Age</td>
-                      <td className="font-mono">{selectedAgent.persona.age_range}</td>
+                      <td className="">{selectedAgent.persona.age_range}</td>
                       <td className="font-semibold text-zinc-400">Last Action</td>
-                      <td className="font-mono">{selectedAgent.last_action_time_ago}</td>
+                      <td className="">{selectedAgent.last_action_time_ago}</td>
                     </tr>
                     <tr>
                       <td className="font-semibold text-zinc-400">Occupation</td>
-                      <td className="font-mono" colSpan={3}>
+                      <td className="" colSpan={3}>
                         {selectedAgent.persona.occupation}
                       </td>
                     </tr>
                     <tr>
                       <td className="font-semibold text-zinc-400">Hobbies</td>
-                      <td className="font-mono" colSpan={3}>
+                      <td className="" colSpan={3}>
                         {selectedAgent.persona.hobbies.join(", ")}
                       </td>
                     </tr>
                     <tr>
                       <td className="font-semibold text-zinc-400">Portfolio Value</td>
-                      <td className="font-mono" colSpan={3}>
+                      <td className="" colSpan={3}>
                         {Math.round(selectedAgent.portfolio_value).toLocaleString()} WEBCOIN
                       </td>
                     </tr>
