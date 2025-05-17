@@ -5,10 +5,10 @@ import { Button } from "~/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "~/components/ui/dialog";
 import { Input } from "~/components/ui/input";
 import { useKeyboardShortcut } from "~/hooks/useKeyboardShortcut";
-import { getAgents, getActions } from "~/lib/dx.server";
+import { getAgents, getActions, getPrompts } from "~/lib/dx.server";
 import { resolveEnsName } from "~/lib/ens.server";
 import type { Route } from "./+types/home";
-import type { Agent, Action } from "~/lib/dx.server";
+import type { Agent, Action, Prompt } from "~/lib/dx.server";
 
 export function meta({}: Route.MetaArgs) {
   return [{ title: "dxdx - dxterminal pro" }, { name: "description", content: "dxdx - dxterminal pro" }];
@@ -19,26 +19,27 @@ export async function loader({ request }: Route.LoaderArgs) {
   const input = url.searchParams.get("address");
 
   if (!input) {
-    return { agents: [], actions: [], address: "" };
+    return { agents: [], actions: [], prompts: [], address: "" };
   }
 
   const { address, error } = await resolveEnsName(input);
   if (error) {
-    return { agents: [], actions: [], address: input, error };
+    return { agents: [], actions: [], prompts: [], address: input, error };
   }
 
   const agents = await getAgents({ address });
   if (agents.length === 0) {
-    return { agents: [], actions: [], address: input, error: "No agents found" };
+    return { agents: [], actions: [], prompts: [], address: input, error: "No agents found" };
   }
 
   const sortedAgents = agents.sort((a: Agent, b: Agent) => b.portfolio_value - a.portfolio_value);
   const actions = await getActions({ agentIds: agents.map((agent: Agent) => agent.id) });
-  return { agents: sortedAgents, actions, address: input };
+  const prompts = await getPrompts({ agentIds: agents.map((agent: Agent) => agent.id) });
+  return { agents: sortedAgents, actions, prompts, address: input };
 }
 
 export default function Home({ loaderData }: Route.ComponentProps) {
-  const { agents, address, error, actions } = loaderData;
+  const { agents, address, error, actions, prompts } = loaderData;
   const [selectedAgent, setSelectedAgent] = React.useState<Agent | null>(null);
   const searchInputRef = React.useRef<HTMLInputElement>(null);
 
@@ -187,11 +188,17 @@ export default function Home({ loaderData }: Route.ComponentProps) {
                       </div>
                     </div>
 
+                    {prompts[agent.id] && (
+                      <div className="text-xs text-zinc-400 mb-2">
+                        <div className="font-medium text-zinc-300">Current Prompt:</div>
+                        <div className="mt-1">{prompts[agent.id]}</div>
+                      </div>
+                    )}
+
                     {actionsByAgent[agent.id]?.[0] && (
                       <div className="text-xs text-zinc-400">
-                        <div className="font-medium text-zinc-300">
-                          {actionsByAgent[agent.id][0].reasoning}
-                        </div>
+                        <div className="font-medium text-zinc-300">Last Action:</div>
+                        <div className="mt-1">{actionsByAgent[agent.id][0].reasoning}</div>
                         <div className="mt-1">{actionsByAgent[agent.id][0].action_time_ago}</div>
                       </div>
                     )}
@@ -313,6 +320,29 @@ export default function Home({ loaderData }: Route.ComponentProps) {
               </div>
 
               <div className="border-b border-zinc-800 my-2" />
+
+              {prompts[selectedAgent.id] && (
+                <div>
+                  <div className="uppercase tracking-wide text-xs font-bold text-zinc-400 mb-2 flex items-center gap-2">
+                    Current Prompt
+                    <button
+                      onClick={() => navigator.clipboard.writeText(prompts[selectedAgent.id])}
+                      className="text-zinc-400 hover:text-white"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                        <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                      </svg>
+                    </button>
+                  </div>
+                  <div className="text-sm text-zinc-300">
+                    {prompts[selectedAgent.id]}
+                  </div>
+                </div>
+              )}
+
+              <div className="border-b border-zinc-800 my-2" />
+
 
               {actionsByAgent[selectedAgent.id] && (
                 <div>
