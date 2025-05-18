@@ -9,7 +9,7 @@ import { getAgents, getActions, getPrompts } from "~/lib/dx.server";
 import { resolveEnsName } from "~/lib/ens.server";
 import type { Route } from "./+types/home";
 import type { Agent, Action, Prompt } from "~/lib/dx.server";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 
 export function meta({}: Route.MetaArgs) {
   return [{ title: "dxdx - dxterminal pro" }, { name: "description", content: "dxdx - dxterminal pro" }];
@@ -42,7 +42,10 @@ export async function loader({ request }: Route.LoaderArgs) {
 export default function Home({ loaderData }: Route.ComponentProps) {
   const { agents, address, error, actions, prompts } = loaderData;
   const [selectedAgent, setSelectedAgent] = React.useState<Agent | null>(null);
-  const [selectedAsset, setSelectedAsset] = React.useState<{ name: string; history: Array<{ timestamp: number; price: number }> } | null>(null);
+  const [selectedAsset, setSelectedAsset] = React.useState<{
+    name: string;
+    history: Array<{ timestamp: number; price: number }>;
+  } | null>(null);
   const searchInputRef = React.useRef<HTMLInputElement>(null);
 
   useKeyboardShortcut({
@@ -74,12 +77,14 @@ export default function Home({ loaderData }: Route.ComponentProps) {
 
   const handleAssetClick = async (assetName: string) => {
     try {
-      const response = await fetch(`https://dx2-public-api-aadnt.ondigitalocean.app/public/v1/pools/${assetName}/history`);
+      const response = await fetch(
+        `https://dx2-public-api-aadnt.ondigitalocean.app/public/v1/pools/${assetName}/history`
+      );
       const data = await response.json();
       const sortedData = [...data].sort((a, b) => a.timestamp - b.timestamp);
       setSelectedAsset({ name: assetName, history: sortedData });
     } catch (error) {
-      console.error('Error fetching price history:', error);
+      console.error("Error fetching price history:", error);
     }
   };
 
@@ -214,12 +219,12 @@ export default function Home({ loaderData }: Route.ComponentProps) {
                         <div className="mt-1">{prompts[agent.id]}</div>
                       </div>
                     )}
-                    
+
                     {actionsByAgent[agent.id]?.[0] && (
                       <div className="text-xs text-zinc-400">
                         <div className="font-medium text-zinc-300">Last Action:</div>
                         <div className="mt-1">{actionsByAgent[agent.id][0].reasoning}</div>
-                        <div className="mt-1">{actionsByAgent[agent.id][0].action_time_ago}</div>
+                        <div className="mt-1">{simpleTime(actionsByAgent[agent.id][0].action_timestamp)}</div>
                       </div>
                     )}
                   </div>
@@ -258,7 +263,7 @@ export default function Home({ loaderData }: Route.ComponentProps) {
                     </Avatar>
                     <div className="flex-1">
                       <div className="text-xs text-zinc-400">
-                        {agent?.name} • {action.action_time_ago}
+                        {agent?.name} • {simpleTime(action.action_timestamp)}
                       </div>
                       <div className="text-sm mt-1">{action.reasoning}</div>
                       {action.details && (
@@ -319,7 +324,7 @@ export default function Home({ loaderData }: Route.ComponentProps) {
                       <td className="font-semibold text-zinc-400">Age</td>
                       <td>{selectedAgent.persona.age_range}</td>
                       <td className="font-semibold text-zinc-400">Last Action</td>
-                      <td>{selectedAgent.last_action_time_ago}</td>
+                      <td>{simpleTime(selectedAgent.last_action_timestamp)}</td>
                     </tr>
                     <tr>
                       <td className="font-semibold text-zinc-400">Occupation</td>
@@ -349,20 +354,27 @@ export default function Home({ loaderData }: Route.ComponentProps) {
                       onClick={() => navigator.clipboard.writeText(prompts[selectedAgent.id])}
                       className="text-zinc-400 hover:text-white"
                     >
-                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="16"
+                        height="16"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
                         <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
                         <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
                       </svg>
                     </button>
                   </div>
-                  <div className="text-sm text-zinc-300">
-                    {prompts[selectedAgent.id]}
-                  </div>
+                  <div className="text-sm text-zinc-300">{prompts[selectedAgent.id]}</div>
                 </div>
               )}
 
               <div className="border-b border-zinc-800 my-2" />
-
 
               {actionsByAgent[selectedAgent.name] && (
                 <div>
@@ -372,7 +384,7 @@ export default function Home({ loaderData }: Route.ComponentProps) {
                   <div className="space-y-2 max-h-56 overflow-y-auto pr-1">
                     {actionsByAgent[selectedAgent.name].slice(0, 10).map((action) => (
                       <div key={action.id} className="bg-zinc-800/50 rounded-lg p-2">
-                        <div className="text-xs text-zinc-400">{action.action_time_ago}</div>
+                        <div className="text-xs text-zinc-400">{simpleTime(action.action_timestamp)}</div>
                         <div className="text-xs mt-1">{action.reasoning}</div>
                         {action.details && (
                           <div className="text-xs text-zinc-400 mt-1">
@@ -402,31 +414,22 @@ export default function Home({ loaderData }: Route.ComponentProps) {
                 <ResponsiveContainer width="100%" height="100%">
                   <LineChart data={selectedAsset.history}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#333" />
-                    <XAxis 
-                      dataKey="timestamp" 
+                    <XAxis
+                      dataKey="timestamp"
                       stroke="#666"
-                      tickFormatter={(timestamp) => new Date(timestamp * 1000).toLocaleTimeString()}
+                      tickFormatter={(timestamp: number) => new Date(timestamp * 1000).toLocaleTimeString()}
                     />
-                    <YAxis 
-                      stroke="#666"
-                      tickFormatter={(price) => price.toFixed(2)}
-                    />
-                    <Tooltip 
-                      contentStyle={{ 
-                        backgroundColor: '#1a1a1a',
-                        border: '1px solid #333',
-                        borderRadius: '4px'
+                    <YAxis stroke="#666" tickFormatter={(price: number) => price.toFixed(2)} />
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: "#1a1a1a",
+                        border: "1px solid #333",
+                        borderRadius: "4px",
                       }}
-                      labelFormatter={(timestamp) => new Date(timestamp * 1000).toLocaleString()}
-                      formatter={(price: number) => [price.toFixed(2), 'Price']}
+                      labelFormatter={(timestamp: number) => new Date(timestamp * 1000).toLocaleString()}
+                      formatter={(price: number) => [price.toFixed(2), "Price"]}
                     />
-                    <Line 
-                      type="monotone" 
-                      dataKey="price" 
-                      stroke="#f97316" 
-                      strokeWidth={2}
-                      dot={false}
-                    />
+                    <Line type="monotone" dataKey="price" stroke="#f97316" strokeWidth={2} dot={false} />
                   </LineChart>
                 </ResponsiveContainer>
               </div>
@@ -436,4 +439,11 @@ export default function Home({ loaderData }: Route.ComponentProps) {
       </Dialog>
     </main>
   );
+}
+
+function simpleTime(timestamp: number | string) {
+  return new Date(timestamp).toLocaleTimeString([], {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
 }

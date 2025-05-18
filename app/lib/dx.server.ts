@@ -29,10 +29,10 @@ export type Agent = {
   card_url: string;
 };
 
+const baseUrl = "https://dx2-public-api-aadnt.ondigitalocean.app/public/v1";
+
 export async function getAgents({ address }: { address: string }) {
-  const response = await fetch(
-    `https://terminal.markets/api/agents/player?playerId=${address}&limit=1000&offset=0`
-  );
+  const response = await fetch(`${baseUrl}/players/${address}/agents?limit=1000&offset=0`);
   const { data } = await response.json();
   if (!data) {
     return [];
@@ -42,20 +42,14 @@ export async function getAgents({ address }: { address: string }) {
 }
 
 export async function getActions({ agentIds }: { agentIds: string[] }) {
-  const url = new URL(`https://terminal.markets/api/agents/logs/actions`);
+  const url = new URL(`${baseUrl}/agents/logs/actions`);
   url.searchParams.set("agent_ids", agentIds.join(","));
   url.searchParams.set("limit", "1000");
   url.searchParams.set("offset", "0");
 
   const response = await fetch(url);
   const { data } = await response.json();
-  return data.map((action: Action) => ({
-    ...action,
-    action_time_ago: new Date(action.action_timestamp).toLocaleTimeString([], {
-      hour: "2-digit",
-      minute: "2-digit",
-    }),
-  })) as Action[];
+  return data;
 }
 
 export type Action = {
@@ -63,7 +57,6 @@ export type Action = {
   agent_id: string;
   agent_name: string;
   action_timestamp: string;
-  action_time_ago: string;
   action_type: string;
   reasoning: string;
   details: {
@@ -78,7 +71,7 @@ export type Action = {
 };
 
 export async function getPrompts({ agentIds }: { agentIds: string[] }) {
-  const url = new URL(`https://terminal.markets/api/agents/prompts`);
+  const url = new URL(`${baseUrl}/agents/prompts`);
   url.searchParams.set("ids", agentIds.join(","));
 
   const response = await fetch(url);
