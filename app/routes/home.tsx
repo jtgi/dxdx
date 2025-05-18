@@ -283,7 +283,11 @@ export default function Home({ loaderData }: Route.ComponentProps) {
 
       <div className="fixed bottom-0 left-0 right-0 p-4 bg-zinc-900/30 backdrop-blur-sm border-t border-zinc-800">
         <div className="max-w-xl mx-auto flex gap-4 items-center justify-between">
-          <div className="text-xl md:text-3xl italic font-extrabold text-zinc-200">dxdx</div>
+          <div className="text-xl md:text-3xl italic font-extrabold text-zinc-200">
+            <a href="/" className="hover:text-orange-400 transition-colors">
+              dxdx
+            </a>
+          </div>
           {renderSearchForm()}
         </div>
       </div>
@@ -389,7 +393,7 @@ export default function Home({ loaderData }: Route.ComponentProps) {
                         {action.details && (
                           <div className="text-xs text-zinc-400 mt-1">
                             <span className="uppercase">{action.details.type}</span> •{" "}
-                            {action.details.amount_in} → {action.details.amount_out}{" "}
+                            {action.details.amount_in} WEBCOIN → {Math.round(action.details.amount_out)}{" "}
                             {action.details.token_symbol}
                           </div>
                         )}
