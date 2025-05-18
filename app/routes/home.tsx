@@ -34,8 +34,8 @@ export async function loader({ request }: Route.LoaderArgs) {
   }
 
   const sortedAgents = agents.sort((a: Agent, b: Agent) => b.portfolio_value - a.portfolio_value);
-  const actions = await getActions({ agentIds: agents.map((agent: Agent) => agent.id) });
-  const prompts = await getPrompts({ agentIds: agents.map((agent: Agent) => agent.id) });
+  const agentIds = sortedAgents.map((agent: Agent) => agent.id);
+  const [actions, prompts] = await Promise.all([getActions({ agentIds }), getPrompts({ agentIds })]);
   return { agents: sortedAgents, actions, prompts, address: input };
 }
 
