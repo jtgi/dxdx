@@ -64,7 +64,7 @@ export default function Home({ loaderData }: Route.ComponentProps) {
   }, {}) as Record<string, number>;
 
   const actionsByAgent = actions.reduce((acc: Record<string, Action[]>, action: Action) => {
-    acc[action.agent_id] = [...(acc[action.agent_id] || []), action];
+    acc[action.agent_name] = [...(acc[action.agent_name] || []), action];
     return acc;
   }, {}) as Record<string, Action[]>;
 
@@ -214,7 +214,7 @@ export default function Home({ loaderData }: Route.ComponentProps) {
                         <div className="mt-1">{prompts[agent.id]}</div>
                       </div>
                     )}
-
+                    
                     {actionsByAgent[agent.id]?.[0] && (
                       <div className="text-xs text-zinc-400">
                         <div className="font-medium text-zinc-300">Last Action:</div>
@@ -248,7 +248,7 @@ export default function Home({ loaderData }: Route.ComponentProps) {
           <h2 className="text-sm font-medium text-zinc-400 mb-3">Recent Actions</h2>
           <div className="space-y-2">
             {sortedActions.map((action) => {
-              const agent = agents.find((a: Agent) => a.id === action.agent_id);
+              const agent = agents.find((a: Agent) => a.name === action.agent_name);
               return (
                 <div key={action.id} className="bg-zinc-900 rounded-lg p-3">
                   <div className="flex items-start gap-2">
@@ -364,13 +364,13 @@ export default function Home({ loaderData }: Route.ComponentProps) {
               <div className="border-b border-zinc-800 my-2" />
 
 
-              {actionsByAgent[selectedAgent.id] && (
+              {actionsByAgent[selectedAgent.name] && (
                 <div>
                   <div className="uppercase tracking-wide text-xs font-bold text-zinc-400 mb-2">
                     Recent Actions
                   </div>
                   <div className="space-y-2 max-h-56 overflow-y-auto pr-1">
-                    {actionsByAgent[selectedAgent.id].slice(0, 10).map((action) => (
+                    {actionsByAgent[selectedAgent.name].slice(0, 10).map((action) => (
                       <div key={action.id} className="bg-zinc-800/50 rounded-lg p-2">
                         <div className="text-xs text-zinc-400">{action.action_time_ago}</div>
                         <div className="text-xs mt-1">{action.reasoning}</div>

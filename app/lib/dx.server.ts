@@ -61,6 +61,7 @@ export async function getActions({ agentIds }: { agentIds: string[] }) {
 export type Action = {
   id: string;
   agent_id: string;
+  agent_name: string;
   action_timestamp: string;
   action_time_ago: string;
   action_type: string;
