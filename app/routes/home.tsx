@@ -76,7 +76,8 @@ export default function Home({ loaderData }: Route.ComponentProps) {
     try {
       const response = await fetch(`https://dx2-public-api-aadnt.ondigitalocean.app/public/v1/pools/${assetName}/history`);
       const data = await response.json();
-      setSelectedAsset({ name: assetName, history: data });
+      const sortedData = [...data].sort((a, b) => a.timestamp - b.timestamp);
+      setSelectedAsset({ name: assetName, history: sortedData });
     } catch (error) {
       console.error('Error fetching price history:', error);
     }
