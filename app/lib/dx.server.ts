@@ -1,11 +1,8 @@
 import { LRUCache } from "lru-cache";
+import { cache } from "./cache.server";
+import { getEnsData } from "./ens.server";
 
 const baseUrl = "https://dx2-public-api-aadnt.ondigitalocean.app/public/v1";
-
-const cache = new LRUCache({
-  max: 500, // Maximum number of items to store
-  ttl: 1000 * 60 * 5, // Cache items for 5 minutes
-});
 
 export async function getAgents({ address }: { address: string }) {
   const response = await fetch(`${baseUrl}/players/${address}/agents?limit=1000&offset=0`);
@@ -33,22 +30,6 @@ export async function getLeaderboard() {
   );
   cache.set(cacheKey, result);
   return result;
-}
-
-export async function getEnsData({ id }: { id: string }): Promise<EnsData | null> {
-  const cacheKey = `ens:${id}`;
-  const cached = cache.get(cacheKey) as EnsData | undefined;
-  if (cached) return cached;
-
-  const response = await fetch(`https://api.ensdata.net/${id}`);
-  if (!response.ok) {
-    return null;
-  }
-
-  const data = await response.json();
-  console.log(`ens ${id}`, data);
-  cache.set(cacheKey, data);
-  return data;
 }
 
 export async function getActions({ agentIds }: { agentIds: string[] }) {
@@ -137,25 +118,4 @@ export type DxLeaderBoardEntry = {
   value: number;
   rank: number;
   id: string;
-};
-
-export type EnsData = {
-  address: string;
-  avatar: string;
-  avatar_small: string;
-  avatar_url: string;
-  contentHash: null;
-  description: string;
-  discord: string;
-  ens: string;
-  ens_primary: string;
-  github: string;
-  keywords: string;
-  notice: string;
-  resolverAddress: string;
-  twitter: string;
-  url: string;
-  wallets: {
-    eth: string;
-  };
 };

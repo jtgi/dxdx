@@ -2,12 +2,12 @@ import React from "react";
 import type { Route } from "./+types/portfolio";
 import { Avatar, AvatarFallback, AvatarImage } from "~/components/ui/avatar";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "~/components/ui/dialog";
-import { getAgents, getActions, getPrompts, getEnsData } from "~/lib/dx.server";
-import { resolveEnsName } from "~/lib/ens.server";
+import { getAgents, getActions, getPrompts } from "~/lib/dx.server";
 import type { Agent, Action } from "~/lib/dx.server";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { SearchForm } from "~/components/SearchForm";
 import { prettyAddress } from "~/lib/utils";
+import { getEnsData } from "~/lib/ens.server";
 
 export function meta({ params }: Route.MetaArgs) {
   return [
