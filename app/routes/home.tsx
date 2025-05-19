@@ -6,6 +6,8 @@ import { Await, Link, redirect } from "react-router";
 import { getLeaderboard } from "~/lib/dx.server";
 import { prettyAddress } from "~/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "~/components/ui/avatar";
+import { Bot } from "lucide-react";
+import numeral from "numeral";
 
 export function meta({}: Route.MetaArgs) {
   return [{ title: "dxdx - dxterminal pro" }, { name: "description", content: "dxdx - dxterminal pro" }];
@@ -69,26 +71,35 @@ export default function Home({ loaderData }: Route.ComponentProps) {
                 {(leaderboard) => (
                   <div>
                     <p className="mb-4 text-zinc-400 font-medium">Top Traders</p>
-                    <div className="grid grid-cols-2 lg:grid-cols-3 gap-2">
+                    <div className="grid grid-cols-2 gap-2">
                       {leaderboard.slice(0, 8).map((leader, index) => (
                         <Link
                           key={leader.id}
                           to={`/${leader.ens?.ens || leader.id}`}
-                          className="flex items-center gap-3 p-2 rounded-lg hover:bg-zinc-800/50 transition-colors"
+                          className="block flex items-center gap-3 p-2 rounded-md border border-zinc-800 hover:bg-zinc-800/50 transition-colors"
                         >
-                          <p className="text-zinc-600 w-6">{index + 1}</p>
-                          <Avatar className="h-7 w-7">
+                          <Avatar className="h-7 w-7 shrink-0">
                             <AvatarImage
                               src={leader.ens?.avatar || leader.ens?.avatar_small || leader.ens?.avatar_url}
                             />
-                            <AvatarFallback>?</AvatarFallback>
+                            <AvatarFallback>
+                              <Bot className="w-5 h-5" />
+                            </AvatarFallback>
                           </Avatar>
-                          <div>
-                            <p className="text-xs text-zinc-300 text-left">
+                          <div className="flex flex-col min-w-0 flex-auto">
+                            <p className="text-xs text-zinc-300 text-left truncate">
                               {leader.ens?.ens || prettyAddress(leader.id)}
                             </p>
-                            <p className="text-zinc-500 text-[8px]">{leader.agents} agents</p>
+                            <div className="flex items-center gap-4">
+                              <p className="text-xs text-zinc-500 text-left flex items-center gap-1">
+                                <Bot className="w-3 h-3 inline" />
+                                <p>{leader.agents}</p>
+                              </p>
+                            </div>
                           </div>
+                          <p className="text-lg font-light text-zinc-300 font-medium text-left pl-2">
+                            ${numeral(leader.value).format("0a").toUpperCase()}
+                          </p>
                         </Link>
                       ))}
                     </div>

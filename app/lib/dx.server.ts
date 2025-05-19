@@ -45,7 +45,8 @@ async function getEnsData({ id }: { id: string }): Promise<EnsData | null> {
     return null;
   }
 
-  const { data } = await response.json();
+  const data = await response.json();
+  console.log(`ens ${id}`, data);
   cache.set(cacheKey, data);
   return data;
 }
