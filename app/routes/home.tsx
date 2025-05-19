@@ -81,7 +81,7 @@ export default function Home({ loaderData }: Route.ComponentProps) {
                             <AvatarImage
                               src={leader.ens?.avatar || leader.ens?.avatar_small || leader.ens?.avatar_url}
                             />
-                            <AvatarFallback>{leader.ens?.ens || prettyAddress(leader.id)}</AvatarFallback>
+                            <AvatarFallback>?</AvatarFallback>
                           </Avatar>
                           <div>
                             <p className="text-zinc-300">{leader.ens?.ens || prettyAddress(leader.id)}</p>
