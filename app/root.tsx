@@ -1,7 +1,9 @@
-import { isRouteErrorResponse, Links, Meta, Outlet, Scripts, ScrollRestoration } from "react-router";
+import { isRouteErrorResponse, Link, Links, Meta, Outlet, Scripts, ScrollRestoration } from "react-router";
 
 import type { Route } from "./+types/root";
 import "./app.css";
+import { Button } from "./components/ui/button";
+import { ArrowLeft } from "lucide-react";
 
 export const links: Route.LinksFunction = () => [
   { rel: "preconnect", href: "https://fonts.googleapis.com" },
@@ -48,14 +50,23 @@ export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
   }
 
   return (
-    <main className="pt-16 p-4 container mx-auto">
-      <h1>{message}</h1>
-      <p>{details}</p>
-      {stack && (
-        <pre className="w-full p-4 overflow-x-auto">
-          <code>{stack}</code>
-        </pre>
-      )}
+    <main className="p-4 text-white w-full h-screen">
+      <div className="flex flex-col items-center justify-center h-[calc(100vh-100px)] p-4">
+        <div className="text-center max-w-xl">
+          <h1 className="text-4xl font-bold mb-6">{message}</h1>
+          <p className="text-zinc-400 mb-8">{details}</p>
+          {stack && (
+            <pre className="w-full p-4 overflow-x-auto bg-zinc-900 rounded-lg text-sm text-zinc-400">
+              <code>{stack}</code>
+            </pre>
+          )}
+          <Link to={"/"}>
+            <Button variant={"link"} className="mt-4 text-white">
+              <ArrowLeft className="w-4 h-4" /> Home
+            </Button>
+          </Link>
+        </div>
+      </div>
     </main>
   );
 }

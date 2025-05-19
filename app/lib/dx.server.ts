@@ -1,12 +1,52 @@
+import { LRUCache } from "lru-cache";
+
 const baseUrl = "https://dx2-public-api-aadnt.ondigitalocean.app/public/v1";
+
+const cache = new LRUCache({
+  max: 500, // Maximum number of items to store
+  ttl: 1000 * 60 * 5, // Cache items for 5 minutes
+});
 
 export async function getAgents({ address }: { address: string }) {
   const response = await fetch(`${baseUrl}/players/${address}/agents?limit=1000&offset=0`);
   const { data } = await response.json();
-  if (!data) {
-    return [];
+  return data || [];
+}
+
+export async function getLeaderboard() {
+  const cacheKey = "leaderboard?limit=25";
+  const cached = cache.get(cacheKey) as Leaderboard | undefined;
+  if (cached) {
+    return cached;
   }
 
+  const response = await fetch(`${baseUrl}/leaderboard/players?limit=25`);
+  const leaders = (await response.json()) as Leaderboard;
+  const result = Promise.all(
+    leaders.map(async (leader) => ({
+      ...leader,
+      ens: await getEnsData({ id: leader.id }).catch(() => null),
+      agents: await getAgents({ address: leader.id })
+        .then((agents: Agent[]) => agents.length)
+        .catch(() => 0),
+    }))
+  );
+  cache.set(cacheKey, result);
+  return result;
+}
+
+async function getEnsData({ id }: { id: string }): Promise<EnsData | null> {
+  const cacheKey = `ens:${id}`;
+  const cached = cache.get(cacheKey) as EnsData | undefined;
+  if (cached) return cached;
+
+  const response = await fetch(`https://api.ensdata.net/${id}`);
+  if (!response.ok) {
+    return null;
+  }
+
+  const { data } = await response.json();
+  cache.set(cacheKey, data);
   return data;
 }
 
@@ -83,4 +123,38 @@ export type Action = {
   };
   location_id: string;
   created_at: string;
+};
+
+export type LeaderboardEntry = {
+  ens: EnsData | null;
+  agents: Agent[];
+} & DxLeaderBoardEntry;
+
+export type Leaderboard = LeaderboardEntry[];
+
+export type DxLeaderBoardEntry = {
+  value: number;
+  rank: number;
+  id: string;
+};
+
+export type EnsData = {
+  address: string;
+  avatar: string;
+  avatar_small: string;
+  avatar_url: string;
+  contentHash: null;
+  description: string;
+  discord: string;
+  ens: string;
+  ens_primary: string;
+  github: string;
+  keywords: string;
+  notice: string;
+  resolverAddress: string;
+  twitter: string;
+  url: string;
+  wallets: {
+    eth: string;
+  };
 };
