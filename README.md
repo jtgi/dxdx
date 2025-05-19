@@ -1,7 +1,8 @@
 # dxdx
+https://github.com/user-attachments/assets/b73691ea-2185-44c5-aec5-16a07d35d575
 
-deployed at https://dxdx.fly.dev
-– powertool for [dxterminal](https://terminal.markets)
+https://dxdx.fly.dev
+– a powertool for [dxterminal](https://terminal.markets)
 
 ## Features
 
