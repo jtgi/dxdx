@@ -53,7 +53,7 @@ export default function Home({ loaderData }: Route.ComponentProps) {
               fallback={
                 <div>
                   <p className="mb-4 text-zinc-400 font-medium">Top Traders</p>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  <div className="grid grid-cols-2 lg:grid-cols-4 gap-2">
                     {Array.from({ length: 10 }).map((_, index) => (
                       <div key={index} className="flex items-center gap-3 p-2 rounded-lg animate-pulse">
                         <span className="text-zinc-600 w-6 text-right">{index + 1}</span>
