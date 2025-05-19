@@ -87,7 +87,7 @@ export default function Home({ loaderData }: Route.ComponentProps) {
                             <p className="text-xs text-zinc-300 text-left">
                               {leader.ens?.ens || prettyAddress(leader.id)}
                             </p>
-                            <p className="text-xs text-zinc-500 text-xs">{leader.agents} agents</p>
+                            <p className="text-zinc-500 text-[8px]">{leader.agents} agents</p>
                           </div>
                         </Link>
                       ))}
