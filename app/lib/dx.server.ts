@@ -35,7 +35,7 @@ export async function getLeaderboard() {
   return result;
 }
 
-async function getEnsData({ id }: { id: string }): Promise<EnsData | null> {
+export async function getEnsData({ id }: { id: string }): Promise<EnsData | null> {
   const cacheKey = `ens:${id}`;
   const cached = cache.get(cacheKey) as EnsData | undefined;
   if (cached) return cached;

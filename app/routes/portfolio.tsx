@@ -2,7 +2,7 @@ import React from "react";
 import type { Route } from "./+types/portfolio";
 import { Avatar, AvatarFallback, AvatarImage } from "~/components/ui/avatar";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "~/components/ui/dialog";
-import { getAgents, getActions, getPrompts } from "~/lib/dx.server";
+import { getAgents, getActions, getPrompts, getEnsData } from "~/lib/dx.server";
 import { resolveEnsName } from "~/lib/ens.server";
 import type { Agent, Action } from "~/lib/dx.server";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
@@ -20,8 +20,8 @@ export async function loader({ params }: Route.LoaderArgs) {
   let address = params.addressOrEnsName;
 
   if (address.includes(".eth")) {
-    const response = await resolveEnsName(address);
-    if (response.error) {
+    const response = await getEnsData({ id: address });
+    if (!response) {
       throw new Response(`Couldn't find an address for ${address}`, { status: 404 });
     }
     address = response.address;
