@@ -127,7 +127,7 @@ export type Action = {
 
 export type LeaderboardEntry = {
   ens: EnsData | null;
-  agents: Agent[];
+  agents: number;
 } & DxLeaderBoardEntry;
 
 export type Leaderboard = LeaderboardEntry[];

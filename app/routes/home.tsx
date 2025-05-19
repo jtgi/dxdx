@@ -69,23 +69,25 @@ export default function Home({ loaderData }: Route.ComponentProps) {
                 {(leaderboard) => (
                   <div>
                     <p className="mb-4 text-zinc-400 font-medium">Top Traders</p>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                      {leaderboard.slice(0, 5).map((leader, index) => (
+                    <div className="grid grid-cols-2 lg:grid-cols-3 gap-2">
+                      {leaderboard.slice(0, 8).map((leader, index) => (
                         <Link
                           key={leader.id}
                           to={`/${leader.ens?.ens || leader.id}`}
                           className="flex items-center gap-3 p-2 rounded-lg hover:bg-zinc-800/50 transition-colors"
                         >
-                          <p className="text-zinc-600 w-6 text-right">{index + 1}</p>
-                          <Avatar className="h-8 w-8">
+                          <p className="text-zinc-600 w-6">{index + 1}</p>
+                          <Avatar className="h-7 w-7">
                             <AvatarImage
                               src={leader.ens?.avatar || leader.ens?.avatar_small || leader.ens?.avatar_url}
                             />
                             <AvatarFallback>?</AvatarFallback>
                           </Avatar>
                           <div>
-                            <p className="text-zinc-300">{leader.ens?.ens || prettyAddress(leader.id)}</p>
-                            <p className="text-zinc-500 text-xs">{leader.agents} agents</p>
+                            <p className="text-xs text-zinc-300 text-left">
+                              {leader.ens?.ens || prettyAddress(leader.id)}
+                            </p>
+                            <p className="text-xs text-zinc-500 text-xs">{leader.agents} agents</p>
                           </div>
                         </Link>
                       ))}
